@@ -6,8 +6,12 @@ const app = express();
 const bodyParser  = require('body-parser');
 //importation de mongoose :
 const mongoose = require('mongoose');
-//on recupere le modele créé dans Produits.js :
-const Produit = require('./models/Produits');
+/*on recupere le modele créé dans Produits.js :
+const Produit = require('./models/Produits');*/
+//importation des routes :
+const produitRoutes =  require('./routes/produits');
+const userRoutes = require('./routes/user');
+
 
 // connection a la basse de donnée :
 //mongodb+srv://yann:<password>@clusterp6.tmanv.mongodb.net/<dbname>?retryWrites=true&w=majority
@@ -41,7 +45,7 @@ app.use(bodyParser.json());
 //dedans on créé une instance du modele produit en lui passant un objet Javascript
 //contenant toutes les infos requises du corps de requête analysé :
 // (on commence par supprimé en amont le faux _id envoyé par le rontend)
-app.post('/api/sauces', (req, res, next) => {
+/*app.post('/api/sauces', (req, res, next) => {
     delete req.body._id;
     const produit = new Produit({
        // name: req.body.name,
@@ -52,14 +56,14 @@ app.post('/api/sauces', (req, res, next) => {
     produit.save()// save vient enregistré produit dans la base de données
         .then(() => req.status(201).json({ message: 'Nouvelle sauce enregistré !'}))
         .catch(error => res.status(400).json({ error }));
-});
+});*/
 /*app.post('/api/sauces', (req, res, next) => {
     console.log(req.body);
     res.status(201).json({
       message: 'Objet créé !'
     });
   });*/
-
+/*
 //pour recuperer l'element selectionnée (recuperer un element specifique):
 app.get('/api/sauces/:id', (req, res, next) => {
     Produit.findOne({ _id: req.params.id})
@@ -80,14 +84,14 @@ app.delete('/api/sauces/:id', (req, res, next) => {
       .catch(error => res.status(400).json({ error }));
   });
   
-/*
-récupérer tous les element des differentees sauces depuis la base de données :
-*/
+
+//récupérer tous les element des differentees sauces depuis la base de données :
+
 app.use( (req, res, next) => {
     Produit.find()//find retourne une promise pour recuperer le tableau de la base de données
        .then(produit => res.status(200).json(produit))
        .catch(error => res.status(400).json({ error }));
-});
+});*/
 
    
     /*  //envoye d'objet depuis le script :
@@ -136,12 +140,13 @@ app.use( (req, res, next) => {
    
     res.status(200).json(stuff);
     next();
-});*/
+});
 app.use((req, res, next) => {
     console.log("Réponse envoyée avec succès!");
     next();
-});
+});*/
 
-
+app.use('/api/sauces', produitRoutes);
+app.use('api/auth', userRoutes);
 
 module.exports = app;
