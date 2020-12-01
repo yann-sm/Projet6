@@ -44,15 +44,16 @@ app.use((req, res, next) => {
     res.setHeader('Content-Security-Policy', "default-src 'self'");
     next();
 });
-
 app.use(cors());
 
-app.use(bodyParser.urlencoded({extended: true}));
-//transforme les données de requête POST en objet JSON :
-app.use(bodyParser.json());
 /**/
 //gestion des images qui seront rentrée :
 app.use('/images', express.static(path.join(__dirname, 'images')));
+//middleware qui permet de parser les requêtes envoyé par le client :
+app.use(bodyParser.urlencoded({extended: true}));
+//transforme les données de requête POST en objet JSON exploitable :
+app.use(bodyParser.json({ type: 'application/json' }));
+
 //routes produit :
 app.use('/api/sauces', produitRoutes);
 //routes utilisateur :

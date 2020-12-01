@@ -7,22 +7,36 @@ const fs = require('fs');
 
 //fonction pour la creation d'un produit :
 exports.createProduit = (req, res, next) => {
-   /* //requête pour extraire l'objet json de produit :
+/*  //requête pour extraire l'objet json de produit :
     const produitObject = JSON.parse(req.body.produit);
     delete produitObject._id;//supprime l'id.
     //creation d'un nouveau model de produit:
     const produit = new Produit({
         ...produitObject,
         imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`//création du lien de l'image importé
-    });*/
+    });  */
     delete req.body._id;
-    const produit = new Produit({ //...req.body,
+    const produit = new Produit({
+        //...req.body,
         name: req.body.name,
-        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
-     });
+        manufacturer: req.body.manufacturer,
+        description: req.body.description,
+        heat: req.body.heat,
+        mainPepper: req.body.mainPepper,
+        userId: req.body.userId,
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
+        likes: 0,
+        dislikes: 0,
+        usersLiked: [],
+        usersDisliked: [],
+    });
+    console.log(req.body);
     produit.save()// save vient enregistré produit dans la base de données et retourne une promise si ok ou pas ok :
         .then(() => res.status(201).json({ message: 'Nouvelle sauce enregistré !'}))
-        .catch(error => res.status(400).json({ error }));
+        .catch(error =>{
+            res.status(400).json({ error })
+            console.log(error);
+        });
 };
 
 
@@ -109,3 +123,46 @@ exports.getAllProduit = (req, res, next) => {
        .then(produits => res.status(200).json(produits))
        .catch(error => res.status(400).json({ error }));
 };
+
+//fonction por liker ou diliker un produit :
+
+exports.likeDislike = (req, res, next) => {
+    //like present dans le body :
+    let like = req.body.like;
+    //recup userID :
+    let userId = req.body.userId;
+    //recup id du produit :
+    let produitId = req.params.id;
+
+    //si on like :
+    if(like === 1){
+        Produit.updateOne({
+            _id: produitId
+        },{
+            //on push l'utilisateur et on incrémente le compteur e like de 1 :
+            $push: {
+                usersLiked: userId
+            },
+            $inc: {
+                likes: +1
+            },
+        })
+        .then(() => res.status(200).json({ message: "1 like ajouté !"}))
+        .catch((error) => res.status(400).json({ error}))
+    }
+    //si on dislike :
+    if(like === -1){
+        Produit.updateOne({
+            _id: produitId
+        },{
+            $push: {
+                userDisliked: userId
+            },
+            $inc: {
+                dislikes: +1
+            }
+        })
+        .then(() => res.status(200).json({ message: "1 dislike ajouté !"}))
+        .catch((error) => res.status(400).json({ error}))
+    }
+}
