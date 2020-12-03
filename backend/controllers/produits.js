@@ -16,14 +16,16 @@ exports.createProduit = (req, res, next) => {
         imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`//création du lien de l'image importé
     });  */
     delete req.body._id;
+    const sauce = JSON.parse(req.body.sauce);
+    console.log(sauce.name);
     const produit = new Produit({
         //...req.body,
-        name: req.body.name,
-        manufacturer: req.body.manufacturer,
-        description: req.body.description,
-        heat: req.body.heat,
-        mainPepper: req.body.mainPepper,
-        userId: req.body.userId,
+        name: sauce.name,
+        manufacturer: sauce.manufacturer,
+        description: sauce.description, 
+        heat: sauce.heat,
+        mainPepper: sauce.mainPepper,
+        userId: sauce.userId,
         imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
         likes: 0,
         dislikes: 0,
@@ -39,6 +41,52 @@ exports.createProduit = (req, res, next) => {
         });
 };
 
+//fonction pour recuperer un seule produit :
+exports.getOneProduit = (req, res, next) => {
+    Produit.findOne({ _id: req.params.id})
+        .then(produit => res.status(200).json(produit))
+        .catch(error => res.status(400).json({ error }));
+};
+//fonction pour recuperer tous les produits :
+exports.getAllProduit = (req, res, next) => {
+    Produit.find()//find retourne une promise pour recuperer tout le tableau de la base de données
+       .then(produit => res.status(200).json(produit))
+       .catch(error => res.status(400).json({ error }));
+};
+
+//fonction pour liker ou diliker un produit :
+exports.likeDislike = (req, res, next) => {
+    //like present dans le body :
+    let like = req.body.like;
+    //recup userID :
+    let userId = req.body.userId;
+    //recup id du produit :
+    let produitId = req.params.id;
+
+    //si on like :
+    if(like === 1 || like < 1) {
+        Produit.updateOne({
+            _id: produitId
+        },{
+            //on push l'utilisateur et on incrémente le compteur de like de 1 :
+            $push: { usersLiked: userId },
+            $inc: { likes: +1 },  
+        })
+        .then(() => res.status(200).json({ message: "1 like ajouté !"}))
+        .catch((error) => res.status(400).json({ error}))
+    }
+    //si on dislike :
+    if(like === -1) {//
+        Produit.updateOne({
+            _id: produitId
+        },{
+            $push: { usersDisliked: userId },
+            $inc: { dislikes: +1 }      
+        })
+        .then(() => { res.status(200).json({ message: "1 dislike ajouté !"})})
+        .catch((error) => res.status(400).json({ error}))
+    } 
+}
 
 //fonction pour la modification d'un produit :
 exports.modifyProduit = (req, res, next) => {
@@ -48,7 +96,7 @@ exports.modifyProduit = (req, res, next) => {
         Produit.findOne({
             _id: req.params.id
         }).then((produit) => {
-            //on supprime l'ancienne image du server
+            //on supprime l'ancienne image du server 
             const filename = produit.imageUrl.split('/images/')[1]
             fs.unlinkSync('images/${filename}')
         }),
@@ -74,20 +122,6 @@ exports.modifyProduit = (req, res, next) => {
     )
     .then(() => res.status(200).json({ message: 'Sauce modifiée !' }))
     .catch((error) => res.status(400).json({ error }))
- /* 
-    PREMIERE ESSAI :
-    const produitObject = req.file ?
-    { */
-        /*on crée un objet thingObject qui regarde si req.file existe ou non. S'il existe, 
-        on traite la nouvelle image ; s'il n'existe pas, on traite simplement l'objet entrant. 
-        On crée ensuite une instance Thing à partir de thingObject, puis on effectue la modification. */
- /*       ...JSON.parse(req.body.produit),
-        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
-    } : { ...req.body };
-    Produit.updateOne({ _id: req.params.id }, { ...req.body, _id: req.params.id })
-        .then(() => res.status(200).json({ message: 'Objet modifié !'}))
-        .catch(error => res.status(400).json({ error }));
-*/
 };
 
 //fonction pour la suppression d'un element :
@@ -108,61 +142,4 @@ nous utilisons l'ID que nous recevons comme paramètre pour accéder au Produit 
 nous utilisons le fait de savoir que notre URL d'image contient un segment /images/ pour séparer le nom de fichier.
 nous utilisons ensuite la fonction unlink du package fs pour supprimer ce fichier, en lui passant le fichier à 
 supprimer et le callback à exécuter une fois ce fichier supprimé.
-dans le callback, nous implémentons la logique d'origine, en supprimant le Produit de la base de données.
 */
-
-//fonction pour recuperer un seule produit :
-exports.getOneProduit = (req, res, next) => {
-    Produit.findOne({ _id: req.params.id})
-        .then(produit => res.status(200).json(produit))
-        .catch(error => res.status(400).json({ error }));
-};
-//fonction pour recuperer tous les produits :
-exports.getAllProduit = (req, res, next) => {
-    Produit.find()//find retourne une promise pour recuperer tout le tableau de la base de données
-       .then(produits => res.status(200).json(produits))
-       .catch(error => res.status(400).json({ error }));
-};
-
-//fonction por liker ou diliker un produit :
-
-exports.likeDislike = (req, res, next) => {
-    //like present dans le body :
-    let like = req.body.like;
-    //recup userID :
-    let userId = req.body.userId;
-    //recup id du produit :
-    let produitId = req.params.id;
-
-    //si on like :
-    if(like === 1){
-        Produit.updateOne({
-            _id: produitId
-        },{
-            //on push l'utilisateur et on incrémente le compteur e like de 1 :
-            $push: {
-                usersLiked: userId
-            },
-            $inc: {
-                likes: +1
-            },
-        })
-        .then(() => res.status(200).json({ message: "1 like ajouté !"}))
-        .catch((error) => res.status(400).json({ error}))
-    }
-    //si on dislike :
-    if(like === -1){
-        Produit.updateOne({
-            _id: produitId
-        },{
-            $push: {
-                userDisliked: userId
-            },
-            $inc: {
-                dislikes: +1
-            }
-        })
-        .then(() => res.status(200).json({ message: "1 dislike ajouté !"}))
-        .catch((error) => res.status(400).json({ error}))
-    }
-}
