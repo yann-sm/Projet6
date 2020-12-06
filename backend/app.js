@@ -9,6 +9,17 @@ const path = require('path');
 //importation des routes :
 const produitRoutes =  require('./routes/produits');
 const userRoutes = require('./routes/user');
+
+//sécurité :
+/*helmet pour la sécurité de l'app. Sécurise les requête http, les en-têtes, contrôle la prélécture DNS des navigateurs,
+empêche le détournement de clics, ajoute une protection XSS, protège contre le reniflement type MIME,
+cross-site scriping, sniffing et clickjacking : */
+const helmet = require('helmet');
+//nocache pour désactiver la mise en cache du navigateur :
+const nocache = require('nocache');
+//cookies de session :
+const session = require('cookie-session');
+
 //import de cors :
 const cors = require('cors');
 
@@ -30,6 +41,7 @@ mongoose.connect('mongodb+srv://yann:09350@clusterp6.tmanv.mongodb.net/TheHottes
 //res pour reponse et req pour requête.
 //JSON pour recuperer un objet JSON contenent le message spécifié 
 //next pour permettre de passé au middleware suivant
+
 //middleware :
 /*- AJOUT DE HEADERS -
 Ces headers permettent :
@@ -47,7 +59,25 @@ app.use((req, res, next) => {
 app.use(cors());
 //transforme les données de requête POST en objet JSON exploitable :
 app.use(bodyParser.json());
-/**/
+
+/* Securité :*/
+//helmet pour la sécurité de l'app :
+app.use(helmet());
+//désactiver la mise en cache du navigateur :
+app.use(nocache());
+//sécurité pour les cookies :
+const expiryDate = new Date(Date.now() + 60*60*1000); //soit une heure.
+app.use(session({
+  name: 'session',//nom donné au cookie.
+  secret: 'secretCookie222',//Une chaîne qui sera utilisée comme clé unique si keys n'est pas fournie.
+  cookie: {//pour définir les option du cookie :
+    secure: true,//un booléen indiquant si le cookie doit être envoyé uniquement via HTTPS ( falsepar défaut pour HTTP, truepar défaut pour HTTPS).
+    httpOnly: true,//un booléen indiquant si le cookie doit être envoyé uniquement via HTTP (S), et non mis à disposition du client JavaScript ( truepar défaut).
+    domain: 'http://localhost:3000',//une chaîne indiquant le domaine du cookie (pas de valeur par défaut).
+    expires: expiryDate //un Dateobjet indiquant la date d'expiration du cookie (expire à la fin de la session par défaut).
+    }
+}));
+
 //gestion des images qui seront rentrée :
 app.use('/images', express.static(path.join(__dirname, 'images')));
 //middleware qui permet de parser les requêtes envoyé par le client :

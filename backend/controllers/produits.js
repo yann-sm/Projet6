@@ -8,18 +8,19 @@ const fs = require('fs');
 //fonction pour la creation d'un produit :
 exports.createProduit = (req, res, next) => {
 /*  //requête pour extraire l'objet json de produit :
-    const produitObject = JSON.parse(req.body.produit);
+    const produitObject = JSON.parse(req.body.sauce);
     delete produitObject._id;//supprime l'id.
     //creation d'un nouveau model de produit:
     const produit = new Produit({
         ...produitObject,
         imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`//création du lien de l'image importé
     });  */
-    delete req.body._id;
+    delete req.body._id;//on supprime l'id généré automatiquement et envoyé par le frontend :
+    //on stock les données envoyées par le frontend sous forme de form-data dans une variable en les transformant en objet js :
     const sauce = JSON.parse(req.body.sauce);
     console.log(sauce.name);
+    //création d'une instance du modèle produit :
     const produit = new Produit({
-        //...req.body,
         name: sauce.name,
         manufacturer: sauce.manufacturer,
         description: sauce.description, 
@@ -54,7 +55,7 @@ exports.getAllProduit = (req, res, next) => {
        .catch(error => res.status(400).json({ error }));
 };
 
-//fonction pour liker ou diliker un produit :
+//fonction pour liker ou disliker un produit :
 exports.likeDislike = (req, res, next) => {
     //like present dans le body :
     let like = req.body.like;
@@ -63,29 +64,52 @@ exports.likeDislike = (req, res, next) => {
     //recup id du produit :
     let produitId = req.params.id;
 
-    //si on like :
-    if(like === 1 || like < 1) {
-        Produit.updateOne({
-            _id: produitId
-        },{
-            //on push l'utilisateur et on incrémente le compteur de like de 1 :
-            $push: { usersLiked: userId },
-            $inc: { likes: +1 },  
-        })
-        .then(() => res.status(200).json({ message: "1 like ajouté !"}))
-        .catch((error) => res.status(400).json({ error}))
-    }
-    //si on dislike :
-    if(like === -1) {//
-        Produit.updateOne({
-            _id: produitId
-        },{
-            $push: { usersDisliked: userId },
-            $inc: { dislikes: +1 }      
-        })
-        .then(() => { res.status(200).json({ message: "1 dislike ajouté !"})})
-        .catch((error) => res.status(400).json({ error}))
-    } 
+    if(like === 1){
+        Produit.updateOne(
+            { _id: produitId },
+                {
+                    $inc: { likes: +1 },//ajout de 1 au nombre de likes.
+                    $push: { usersLiked: userId }//ajout de l'utilisatuer au tableau des usersLiked.
+                }
+        )
+        .then(() => { res.status(200).json({ message: "1 like ajouté !"}),console.log('1 like ajouté !')})
+        .catch((error) => res.status(400).json({ error}));
+    }else if(like === -1){
+        Produit.updateOne(
+            { _id: produitId },
+                {
+                    $inc: { dislikes: +1 },//ajout de 1 au nombre de dislikes.
+                    $push: { usersDisliked: userId }//ajout de l'utilisatuer au tableau des usersDisliked.
+                }
+        )
+        .then(() => res.status(200).json({ message: "1 dislike ajouté !"}), console.log('1 dislike ajouté !'))
+        .catch((error) => res.status(404).json({ error }));
+    }else{
+        Produit.findOne({ _id: req.params.id })
+        .then((produit) => {
+            if (produit.usersDisliked.find(userId => userId === req.body.userId)){
+                Produit.updateOne(
+                    { _id: produitId },
+                        {
+                            $inc: { dislikes: -1 },//suppression de 1 au nombre de dislikes.
+                            $pull: { usersDisliked: userId }//suppression de l'utilisateur au tableau des usersDisliked.
+                        }
+                )
+                .then(() => { res.status(200).json({ message: "changement d'avis !"}), console.log('changement, 1 dislike de moins !')})
+                .catch((error) => { res.status(404).json({ error })});
+            }else {
+                Produit.updateOne(
+                    { _id: produitId },
+                        {
+                            $inc: { likes: -1 },//suppression de 1 au nombre de likes.
+                            $pull:  { usersLiked: userId}//suppression de l'utilisateur au tableau des usersliked.
+                        }
+                )
+                .then(() => {res.status(200).json({ message: "changement d'avis !"}), console.log('changement, 1 like en moins !')})
+                .catch((error) => { res.status(404).json({ error})});
+            }
+        });
+    }/* */
 }
 
 //fonction pour la modification d'un produit :
