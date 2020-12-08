@@ -4,7 +4,7 @@ const express = require('express');
 const bodyParser  = require('body-parser');
 //importation de mongoose :
 const mongoose = require('mongoose');
-//import pour accédé au path de notre server :
+//import de path pour accédé au path de notre server :
 const path = require('path');
 //importation des routes :
 const produitRoutes =  require('./routes/produits');
@@ -17,8 +17,6 @@ cross-site scriping, sniffing et clickjacking : */
 const helmet = require('helmet');
 //nocache pour désactiver la mise en cache du navigateur :
 const nocache = require('nocache');
-//cookies de session :
-const session = require('cookie-session');
 
 //import de cors :
 const cors = require('cors');
@@ -26,10 +24,16 @@ const cors = require('cors');
 //on créé l'application express :
 const app = express();
 
+//Dotenv est un module sans dépandence.
+//utilisation du module dotenv pour masquer les informations de connexion à la base de données
+//avec des variables d'environnement :
+require('dotenv').config();
+
 
 // connection a la basse de donnée :
 //mongodb+srv://yann:<password>@clusterp6.tmanv.mongodb.net/<dbname>?retryWrites=true&w=majority
-mongoose.connect('mongodb+srv://yann:09350@clusterp6.tmanv.mongodb.net/TheHottest?retryWrites=true&w=majority',
+//process.env permet d'accédé à la variable d'environnement voulu, contenant les informations de connexion à la base de donnée détenu dans le fichier .env:
+mongoose.connect(process.env.DB_CON,
   { useCreateIndex: true,
     useNewUrlParser: true,
     useUnifiedTopology: true })
@@ -65,18 +69,7 @@ app.use(bodyParser.json());
 app.use(helmet());
 //désactiver la mise en cache du navigateur :
 app.use(nocache());
-//sécurité pour les cookies :
-const expiryDate = new Date(Date.now() + 60*60*1000); //soit une heure.
-app.use(session({
-  name: 'session',//nom donné au cookie.
-  secret: 'secretCookie222',//Une chaîne qui sera utilisée comme clé unique si keys n'est pas fournie.
-  cookie: {//pour définir les option du cookie :
-    secure: true,//un booléen indiquant si le cookie doit être envoyé uniquement via HTTPS ( falsepar défaut pour HTTP, truepar défaut pour HTTPS).
-    httpOnly: true,//un booléen indiquant si le cookie doit être envoyé uniquement via HTTP (S), et non mis à disposition du client JavaScript ( truepar défaut).
-    domain: 'http://localhost:3000',//une chaîne indiquant le domaine du cookie (pas de valeur par défaut).
-    expires: expiryDate //un Dateobjet indiquant la date d'expiration du cookie (expire à la fin de la session par défaut).
-    }
-}));
+/**/
 
 //gestion des images qui seront rentrée :
 app.use('/images', express.static(path.join(__dirname, 'images')));
