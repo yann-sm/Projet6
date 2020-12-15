@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 
-//on associe les fonction au différentes routede produit en important les controllers :
+//on associe les fonction au différentes route de produit en important les controllers :
 const produitCtrl = require('../controllers/produits');
 //import des middlewares :
 const auth = require('../middleware/auth');

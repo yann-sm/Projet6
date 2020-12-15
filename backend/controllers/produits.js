@@ -7,14 +7,6 @@ const fs = require('fs');
 
 //fonction pour la creation d'un produit :
 exports.createProduit = (req, res, next) => {
-/*  //requête pour extraire l'objet json de produit :
-    const produitObject = JSON.parse(req.body.sauce);
-    delete produitObject._id;//supprime l'id.
-    //creation d'un nouveau model de produit:
-    const produit = new Produit({
-        ...produitObject,
-        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`//création du lien de l'image importé
-    });  */
     delete req.body._id;//on supprime l'id généré automatiquement et envoyé par le frontend :
     //on stock les données envoyées par le frontend sous forme de form-data dans une variable en les transformant en objet js :
     const sauce = JSON.parse(req.body.sauce);
@@ -44,6 +36,7 @@ exports.createProduit = (req, res, next) => {
 
 //fonction pour recuperer un seule produit :
 exports.getOneProduit = (req, res, next) => {
+    //recupération d'un produit en fonction de son ID :
     Produit.findOne({ _id: req.params.id})
         .then(produit => res.status(200).json(produit))
         .catch(error => res.status(400).json({ error }));
@@ -63,7 +56,7 @@ exports.likeDislike = (req, res, next) => {
     let userId = req.body.userId;
     //recup id du produit :
     let produitId = req.params.id;
-
+    //si on like :
     if(like === 1){
         Produit.updateOne(
             { _id: produitId },
@@ -74,7 +67,7 @@ exports.likeDislike = (req, res, next) => {
         )
         .then(() => { res.status(200).json({ message: "1 like ajouté !"}),console.log('1 like ajouté !')})
         .catch((error) => res.status(400).json({ error}));
-    }else if(like === -1){
+    }else if(like === -1){// si on dislike :
         Produit.updateOne(
             { _id: produitId },
                 {
@@ -84,7 +77,7 @@ exports.likeDislike = (req, res, next) => {
         )
         .then(() => res.status(200).json({ message: "1 dislike ajouté !"}), console.log('1 dislike ajouté !'))
         .catch((error) => res.status(404).json({ error }));
-    }else{
+    }else{//si on enlève un dislike :
         Produit.findOne({ _id: req.params.id })
         .then((produit) => {
             if (produit.usersDisliked.find(userId => userId === req.body.userId)){
@@ -97,7 +90,7 @@ exports.likeDislike = (req, res, next) => {
                 )
                 .then(() => { res.status(200).json({ message: "changement d'avis !"}), console.log('changement, 1 dislike de moins !')})
                 .catch((error) => { res.status(404).json({ error })});
-            }else {
+            }else {//si on enlève un like :
                 Produit.updateOne(
                     { _id: produitId },
                         {
@@ -115,28 +108,29 @@ exports.likeDislike = (req, res, next) => {
 //fonction pour la modification d'un produit :
 exports.modifyProduit = (req, res, next) => {
     let produitObject = {};
-    req.file ? (
-        //si la modification contient une image (uilisation d'une ternaire comme structure conditionnelle)
+    if(req.file){ //si la modification contient une image :
+        //recherche d'un element en fonction des parametres :
         Produit.findOne({
             _id: req.params.id
         }).then((produit) => {
-            //on supprime l'ancienne image du server 
-            const filename = produit.imageUrl.split('/images/')[1]
-            fs.unlinkSync('images/${filename}')
+            //récupération de l'image :
+            const filename = produit.imageUrl.split('/images/')[1];
+            //on supprime l'ancienne image du server :
+            fs.unlinkSync(`images/${filename}`);
         }),
         produitObject = {
             //on modifie les données et on ajoute la nouvelle images :
-            ...JSON.parse(req.body.produit),
+            ...JSON.parse(req.body.sauce),
             imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
         }
-    ) : ( //operateur ternaire equivalent à if(){} else{} => condition ?instruction si vrai : instruction si faux
-    //si la modification ne contient pas de nouvelle image
+    }else{
+    //si la modification ne contient pas de nouvelle image :
         produitObject = {
             ...req.body
         }
-    )
+    }//)
     Produit.updateOne(
-        //on applique les parametres de sauceObject
+        //on applique les parametres de produitObject :
         { 
             _id: req.params.id
         }, {
@@ -150,10 +144,14 @@ exports.modifyProduit = (req, res, next) => {
 
 //fonction pour la suppression d'un element :
 exports.deleteProduit = (req, res, next) => {
+    //recherche d'un element en fonction des parametres :
     Produit.findOne({ _id: req.params.id })
-    .then(produit => {
+    .then(produit => {//si produit existe :
+        //recuperation de l'image :
         const filename = produit.imageUrl.split('/images/')[1];
+        //supression de l'image récupéré :
         fs.unlink(`images/${filename}`, () => {
+            //supression du produit en fonction de son ID :
             Produit.deleteOne({ _id: req.params.id })
             .then(() => res.status(200).json({ message: 'Objet supprimé !'}))
             .catch(error => res.status(400).json({ error }));

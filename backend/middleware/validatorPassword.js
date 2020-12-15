@@ -1,5 +1,4 @@
 
-const validatorPassword = require('../models/Password');
 const passwordSchema = require('../models/Password');
 
 //vérification que le mot de passe valide le schema décrit dans models :

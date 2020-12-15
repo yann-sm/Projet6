@@ -1,3 +1,8 @@
+//Dotenv est un module sans dépandence.
+//utilisation du module dotenv pour masquer les informations de connexion à la base de données
+//avec des variables d'environnement :
+require('dotenv').config();
+
 //on import express :
 const express = require('express');
 //on importe body-parser pour être capable d'extraire l'objet JSON d'une demande :
@@ -24,10 +29,6 @@ const cors = require('cors');
 //on créé l'application express :
 const app = express();
 
-//Dotenv est un module sans dépandence.
-//utilisation du module dotenv pour masquer les informations de connexion à la base de données
-//avec des variables d'environnement :
-require('dotenv').config();
 
 
 // connection a la basse de donnée :

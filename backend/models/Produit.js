@@ -8,17 +8,17 @@ const validatorProduit = require('../middleware/validatorProduit');
 //création du schema de données du produit :
 const schemaProduit = mongoose.Schema({//probleme avec required ??????
     //_id: { type: String, required: true },// l'id est généré automatiquement par mongoose.
-    name: { type: String, required: true, default: 'sauce', validate: validatorProduit.validatorName },
-    manufacturer: { type: String, required: true, default: 'CORSAIRE',validate: validatorProduit.validatorManufacturer },
-    description: { type: String, required: true, default: 'Super sauce',validate: validatorProduit.validatorDescription },
+    name: { type: String, required: true, validate: validatorProduit.validatorName },
+    manufacturer: { type: String, required: true, validate: validatorProduit.validatorManufacturer },
+    description: { type: String, required: true },
     heat: { type: Number, required: true, default: 2},
     likes: { type: Number },
     dislikes: { type: Number },
     imageUrl: { type: String, required: true},
-    mainPepper: { type: String, required: true, default: 'secret',validate: validatorProduit.validatorPepper },
+    mainPepper: { type: String, required: true, validate: validatorProduit.validatorPepper },
     usersLiked: { type: [String] },
     usersDisliked: { type: [String] },
-    userId: { type: String, required: true, default: '12'}
+    userId: { type: String, required: true }
 });
 schemaProduit.plugin(sanitizerPlugin);
 
