@@ -1,7 +1,7 @@
 # Projet6
 
 Pour faire tourner le frontend :
- - ouvrir le terinal sur le dossier frontend
+ - ouvrir le terminal sur le dossier frontend
  - executer 'npm install' pour installer les dépendances
  - executer 'npm install node-sass' pour installer sass
  - Le projet a été généré avec [Angular CLI](https://github.com/angular/angular-cli) version 7.0.2.
