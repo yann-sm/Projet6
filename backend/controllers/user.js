@@ -5,7 +5,8 @@ const bcrypt = require('bcrypt');
 const User = require('../models/User');
 //import de jsonwebtoken pour créer et vérifier les tokens d'authentifications:
 const jwt = require('jsonwebtoken');
-
+//import de js-base64 pour encodé l'email en base 64 :
+const { encode } = require('js-base64');
 
 //fonction pour l'enregistrement de nouveau utilisateurs :
 exports.signup = (req, res, next) => {
@@ -15,7 +16,7 @@ exports.signup = (req, res, next) => {
     //nous créont notre utilisateur et l'enregistrons dans la base de données avec save :
         .then(hash => {
             const user = new User({
-                email: req.body.email,
+                email: encode(req.body.email),//encodage de l'email en base 64
                 password: hash
             });
             user.save()
@@ -29,7 +30,7 @@ exports.signup = (req, res, next) => {
 //fonction pour connecter des utilisateurs existant :
 exports.login = (req, res, next) => {
     //on verifie que l'email entrée par l'utilisateur correspond à un utilisateur existant dans la base de données : 
-    User.findOne({ email: req.body.email })
+    User.findOne({ email: encode(req.body.email) })//on encode l'email en base 64 pour le comparé a celui stocké dans la base de données.
         .then(user => {//si aucun utilisateur trouvé :
             if(!user){
                 return res.status(401).json({ error: 'utilisateur non trouvé !'});
