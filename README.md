@@ -9,7 +9,8 @@ Pour faire tourner le frontend :
 
 Pour faire tourner le backend :
  - ouvrir le terminal sur le dossier backend
- - taper 'npm run dev' dans le terminal pour lancé le server
+ - pour utiliser le serveur, installer le package nodemon en entrant dans le terminla 'npm install -g nodemon
+ - taper 'npm run dev' dans le terminal pour lancé le serveur
  - ouvrir un navigateur sur l'url suivante : 'http://localhost:4200'
  
 Si les packages sont déjà installés :
